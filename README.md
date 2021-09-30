@@ -279,6 +279,21 @@ class ExampleClass(metaclass=SDPropertyMetaclass):
 'second_new_attr'
 ```
 
+If you have a configuration that has a lot of nested configs and you don't want to explicity set out the list of super keys for each property you can create a property for a single parent and then base other properties off of that property. For example:
+```python
+class ExampleClass(metaclass=SDPropertyMetaclass):
+    parent_attr    = SDProperty()
+    dependent_attr = SDProperty(superkeys=parent_attr)
+
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
+
+>>> config = {'parent_attr': {'dependent_attr': 'val'}}
+>>> example_class = ExampleClass()
+>>> example_class.dependent_attr
+'val'
+```
+
 ##### Dependent Properties + Class Inheritance
 
 If we use the same example from the `Class Inheritance` section, but change the child property to be dependent on a property in the parent class it would look like this:

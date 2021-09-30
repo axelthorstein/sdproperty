@@ -64,3 +64,21 @@ class TestDependentProperties:
         actual = test_class.updating_dependent_attr
 
         assert expected == actual
+
+    def test_attr_is_dependent_on_another_sdproperty(self):
+        config = {'base_attr': {'sdproperty_dependent_attr': 'test'}}
+        test_class = DependentProperties(**config)
+
+        expected = 'test'
+        actual = test_class.sdproperty_dependent_attr
+
+        assert expected == actual
+
+    def test_attr_is_dependent_on_nested_sdproperty(self):
+        config = {'parent_1': {'parent_2': {'nested_parent_attr': {'nested_dependent_attr': 'val'}}}}
+        test_class = DependentProperties(**config)
+
+        expected = 'val'
+        actual = test_class.nested_dependent_attr
+
+        assert expected == actual

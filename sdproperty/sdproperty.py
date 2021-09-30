@@ -86,7 +86,12 @@ class SDProperty:
     def _get_instance_kwargs(instance, superkeys):
         if instance.__dict__.get('kwargs'):
             if superkeys:
-                return get_subkey_from_dict(instance.kwargs, list(superkeys))
+                if isinstance(superkeys, SDProperty):
+                    if not instance.__dict__.get(superkeys.name, None):
+                        getattr(instance, superkeys.name)
+                    return instance.__dict__[superkeys.name]
+                else:
+                    return get_subkey_from_dict(instance.kwargs, superkeys)
             return instance.kwargs
         return {}
 

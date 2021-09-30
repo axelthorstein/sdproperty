@@ -30,9 +30,12 @@ class RequiredProperties(metaclass=SDPropertyMetaclass):
 
 
 class DependentProperties(metaclass=SDPropertyMetaclass):
-    base_attr               = SDProperty()
-    dependent_attr          = SDProperty(default=base_attr)
-    updating_dependent_attr = SDProperty(default=base_attr, singleton=False)
+    base_attr                 = SDProperty()
+    dependent_attr            = SDProperty(default=base_attr)
+    updating_dependent_attr   = SDProperty(default=base_attr, singleton=False)
+    sdproperty_dependent_attr = SDProperty(superkeys=base_attr)
+    nested_parent_attr        = SDProperty(superkeys=['parent_1', 'parent_2'])
+    nested_dependent_attr     = SDProperty(superkeys=nested_parent_attr)
 
     def __init__(self, **kwargs):
         self.kwargs = kwargs

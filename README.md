@@ -40,12 +40,14 @@ class ExampleClass():
     def __init__(self,
                  base_attr,
                  defaulted_attr='example_default',
+                 validated_attr=None,
                  dict_combine_attr={},
                  dict_overwrite_attr={'key': 'val'},
                  list_combine_attr=['elem1'],
                  list_overwrite_attr=['elem1']):
         self.base_attr = base_attr
         self.defaulted_attr = defaulted_attr
+        self.validated_attr = validated_attr
         self.dict_combine_attr = dict_combine_attr
         self.dict_overwrite_attr = dict_overwrite_attr
         self.list_combine_attr = list_combine_attr
@@ -60,6 +62,12 @@ class ExampleClass():
     @property
     def defaulted_attr(self):
         return self.defaulted_attr
+
+    @property
+    def validated_attr(self):
+        if 0 < len(self.validated_attr) < 64:
+            return self.validated_attr
+        raise Exception("Value is not the correct length.")
 
     @property
     def dict_combine_attr(self):
@@ -89,6 +97,7 @@ into this:
 class ExampleClass(metaclass=SDPropertyMetaclass):
     base_attr           = SDProperty()
     defaulted_attr      = SDProperty(default='example_default')
+    validated_attr      = SDProperty(validate=lambda x: 0 < x < 64)
     dict_combine_attr   = SDProperty(default={'key1': 'val1', 'key2': 'val2'})
     dict_overwrite_attr = SDProperty(default={'key': 'val'}, combine_defaults=False)
     list_combine_attr   = SDProperty(default=['elem1'], combine_defaults=True)
@@ -335,6 +344,32 @@ class ExampleClass(metaclass=SDPropertyMetaclass):
 ```
 
 Note that the first subkey is the name of the keyword in `kwargs`, then each subsequent subkey is the name of a key. Using this strategy you could potentially store all of your configs as a multi level JSON blob and pass them directly into the class.
+
+
+#### Validating Properties
+
+In the case that some validation needs to be done on a property there is the `validate` keyword. Validation can come in the form of a regex pattern, a simple lamdba function, or a traditional function.
+
+```Python
+class ExampleClass(metaclass=SDPropertyMetaclass):
+
+    def validate_str(string):
+        if isinstance(string, str):
+            return True
+
+    validate_regex_attr  = SDProperty(validate='^[1-9]?$|^64$')
+    validate_lambda_attr = SDProperty(validate=lambda x: 0 < x < 2)
+    validate_func_attr   = SDProperty(validate=validate_str)
+
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
+
+>>> example_class = ExampleClass(validate_regex_attr=1).validate_regex_attr
+1
+>>> ExampleClass(validate_regex_attr=0)
+# raises InvalidPropertyException
+```
+Note: If validation is done by a traditional function it either needs to be defined outside of the class or above the properties in the class. At the time of evaluation the class isn't instantiated yet so you cannot validate properties with class methods.
 
 
 #### The Transform Keyword

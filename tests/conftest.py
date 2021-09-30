@@ -100,5 +100,19 @@ class SuperkeyProperties(metaclass=SDPropertyMetaclass):
         self.kwargs = kwargs
 
 
+class ValidateProperties(metaclass=SDPropertyMetaclass):
+
+    def validate_str(string):
+        if isinstance(string, str):
+            return True
+
+    validate_regex_attr  = SDProperty(validate='^[1-9]?$|^64$')
+    validate_lambda_attr = SDProperty(validate=lambda x: 0 < x < 2)
+    validate_func_attr   = SDProperty(validate=validate_str)
+
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
+
+
 class NoMetaclass():
     base_attr = SDProperty()

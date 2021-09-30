@@ -1,3 +1,4 @@
+import re
 from functools import wraps
 
 from sdproperty.utils import combine_dicts
@@ -7,6 +8,7 @@ from sdproperty.exceptions import MetaclassNotSetException
 from sdproperty.exceptions import RequiredPropertyException
 from sdproperty.exceptions import TransformNotCallableException
 from sdproperty.exceptions import MismatchedPropertyTypesException
+from sdproperty.exceptions import InvalidPropertyException
 
 
 def sdproperty(func):
@@ -29,6 +31,7 @@ class SDProperty:
                  default=None,
                  singleton=True,
                  required=False,
+                 validate=None,
                  combine_defaults=True,
                  superkeys=None,
                  transform=None):
@@ -36,12 +39,21 @@ class SDProperty:
         self.default = default
         self.singleton = singleton
         self.required = required
+        self.validate = validate
         self.combine_defaults = combine_defaults
         self.superkeys = superkeys
         self.transform = transform
 
     def _required_value_not_set(self, default):
         return default is None and self.required
+
+    def _validate(self, value):
+        if callable(self.validate):
+            return self.validate(value)
+        if isinstance(self.validate, str): # Assume Regex pattern.
+            if re.match(self.validate, str(value)):
+                return True
+        return False
 
     def _combine_with_defaults(self, value, default):
         if self.combine_defaults and default:
@@ -128,11 +140,13 @@ class SDProperty:
         if not self.singleton or SDProperty._property_unset(instance, self.name):
             # We have to check if not None in case the value is a negative bool.
             if self.singleton and instance_kwargs.get(self.name, None) is not None:
+                if self.validate and not self._validate(instance_kwargs[self.name]):
+                    raise InvalidPropertyException(
+                        self.name, instance_kwargs[self.name], self.validate)
                 self._set_property_from_kwarg(instance, instance_kwargs, default)
             elif self._required_value_not_set(default):
                 raise RequiredPropertyException(self.name, instance)
             else:
-
                 value = self._apply_transform(default, instance)
                 self.__set__(instance, value)
 

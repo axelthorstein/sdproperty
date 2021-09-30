@@ -1,4 +1,6 @@
 # pylint: disable=super-init-not-called
+import inspect
+
 
 class RequiredPropertyException(Exception):
 
@@ -55,3 +57,20 @@ class MismatchedPropertyTypesException(Exception):
             f" of different types: '{self.default}' (type: " + \
             f"{type(self.default)}) != '{self.new_value}' " + \
             f"(type: {type(self.new_value)})"
+
+
+class InvalidPropertyException(Exception):
+
+    def __init__(self, name, value, validate, message=None):
+        self.name = name
+        self.value = value
+        self.validate = validate
+        self.message = message
+
+    def __str__(self):
+        if self.message:
+            return self.message
+        if not isinstance(self.validate, str):
+            self.validate = inspect.getsource(self.validate)
+        return f"The '{self.name}' property's value '{self.value}' does not" + \
+            f" match the validation condition: \n\n{self.validate}"
